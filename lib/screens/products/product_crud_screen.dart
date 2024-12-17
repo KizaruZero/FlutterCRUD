@@ -48,17 +48,19 @@ class _ProductCrudScreenState extends State<ProductCrudScreen> {
         stock: _stock,
         image: _image,
       );
-
       try {
         if (widget.product == null) {
           await ProductService().createProduct(product);
         } else {
           await ProductService().updateProduct(product);
         }
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Explicitly pass true
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save product')),
+          SnackBar(
+            content: Text('Failed to save product'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

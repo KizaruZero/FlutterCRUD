@@ -40,6 +40,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
+  Future<void> _refreshProducts() async {
+    try {
+      setState(() {
+        _products = ProductService().getProducts();
+      });
+      await _products; // Wait for the products to load
+    } catch (e) {
+      print('Error refreshing products: $e');
+      _showSnackBar('Failed to refresh products', isError: true);
+    }
+  }
+
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -119,10 +131,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ProductCrudScreen()),
-                ).then((_) {
-                  setState(() {
-                    _products = ProductService().getProducts();
-                  });
+                ).then((result) {
+                  if (result == true) {
+                    // Explicitly check for true to ensure product was created/updated
+                    _refreshProducts();
+                  }
                 });
               },
             ),
@@ -130,132 +143,134 @@ class _ProductListScreenState extends State<ProductListScreen> {
         ],
       ),
       backgroundColor: Colors.grey[100],
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Responsive Grid Calculation
-          int crossAxisCount;
-          if (constraints.maxWidth >= 1200) {
-            // Desktop: 3 cards per row
-            crossAxisCount = 3;
-          } else if (constraints.maxWidth >= 600) {
-            // Tablet/Medium: 2 cards per row
-            crossAxisCount = 2;
-          } else {
-            // Mobile: 1 card per row
-            crossAxisCount = 1;
-          }
-
-          return FutureBuilder<List<Product>>(
-            future: _products,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Colors.orange[700]!),
-                  ),
-                );
-              } else if (snapshot.hasError) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.red[700],
-                        size: 60,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Failed to load products',
-                        style: TextStyle(
-                          color: Colors.red[700],
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                final products = snapshot.data!;
-
-                // Empty State Handling
-                if (products.isEmpty) {
+      body: RefreshIndicator(
+        onRefresh: _refreshProducts, // Use the new method
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive Grid Calculation
+            int crossAxisCount;
+            if (constraints.maxWidth >= 1200) {
+              // Desktop: 3 cards per row
+              crossAxisCount = 3;
+            } else if (constraints.maxWidth >= 600) {
+              // Tablet/Medium: 2 cards per row
+              crossAxisCount = 2;
+            } else {
+              // Mobile: 1 card per row
+              crossAxisCount = 1;
+            }
+            return FutureBuilder<List<Product>>(
+              future: _products,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.orange[700]!),
+                    ),
+                  );
+                } else if (snapshot.hasError) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.shopping_bag_outlined,
-                          color: Colors.grey[400],
-                          size: 80,
+                          Icons.error_outline,
+                          color: Colors.red[700],
+                          size: 60,
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No products found',
+                          'Failed to load products',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: Colors.red[700],
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Add a new product to get started',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
                   );
-                }
+                } else {
+                  final products = snapshot.data!;
 
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {
-                      _products = ProductService().getProducts();
-                    });
-                  },
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(10),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      childAspectRatio:
-                          0.65, // Adjust for better card proportions
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final product = products[index];
-                      return ProductCard(
-                        product: product,
-                        onEdit: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ProductCrudScreen(product: product),
+                  // Empty State Handling
+                  if (products.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.shopping_bag_outlined,
+                            color: Colors.grey[400],
+                            size: 80,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No products found',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                             ),
-                          ).then((_) {
-                            setState(() {
-                              _products = ProductService().getProducts();
-                            });
-                          });
-                        },
-                        onDelete: () => _confirmDelete(product.id),
-                        isLoading: _isLoading,
-                      );
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Add a new product to get started',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {
+                        _products = ProductService().getProducts();
+                      });
                     },
-                  ),
-                );
-              }
-            },
-          );
-        },
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(10),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        childAspectRatio:
+                            0.65, // Adjust for better card proportions
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return ProductCard(
+                          product: product,
+                          onEdit: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProductCrudScreen(product: product),
+                              ),
+                            ).then((_) {
+                              setState(() {
+                                _products = ProductService().getProducts();
+                              });
+                            });
+                          },
+                          onDelete: () => _confirmDelete(product.id),
+                          isLoading: _isLoading,
+                        );
+                      },
+                    ),
+                  );
+                }
+              },
+            );
+          },
+        ),
       ),
     );
   }
