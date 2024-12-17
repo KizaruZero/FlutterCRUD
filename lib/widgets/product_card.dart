@@ -17,89 +17,59 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
+      margin: const EdgeInsets.all(8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min, // Penting untuk mengurangi white space
         children: [
-          // Image Section with Gradient Overlay
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Stack(
-              children: [
-                isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : Image.network(
-                        product.image,
-                        width: double.infinity,
-                        height: 250,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 250,
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(Icons.broken_image,
-                                  size: 100, color: Colors.grey),
+          // Full Width Image dengan aspect ratio 1:1 untuk 450x450
+          AspectRatio(
+            aspectRatio: 1, // 1:1 aspect ratio untuk gambar persegi
+            child: ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(15)),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Image.network(
+                      product.image,
+                      fit: BoxFit.cover, // Pastikan gambar cover penuh
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: Icon(Icons.broken_image,
+                                size: 100, color: Colors.grey),
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey[200],
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      (loadingProgress.expectedTotalBytes ?? 1)
+                                  : null,
                             ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            height: 250,
-                            color: Colors.grey[200],
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        (loadingProgress.expectedTotalBytes ??
-                                            1)
-                                    : null,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                // Gradient Overlay
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                ),
-              ],
             ),
           ),
 
-          // Product Details Section
+          // Compress the details section
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0), // Kurangi padding
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -107,26 +77,26 @@ class ProductCard extends StatelessWidget {
                 Text(
                   product.category.toUpperCase(),
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11, // Sedikit lebih kecil
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
                     color: Colors.orange[700],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6), // Kurangi jarak
 
                 // Product Name
                 Text(
                   product.name,
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 18, // Sedikit lebih kecil
                     fontWeight: FontWeight.w700,
                     color: Colors.black87,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8), // Kurangi jarak
 
                 // Price and Stock Row
                 Row(
@@ -136,7 +106,7 @@ class ProductCard extends StatelessWidget {
                     Text(
                       'Rp${product.price}',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 16, // Sedikit lebih kecil
                         fontWeight: FontWeight.w800,
                         color: Colors.green[700],
                       ),
@@ -145,7 +115,7 @@ class ProductCard extends StatelessWidget {
                     // Stock
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                          horizontal: 8, vertical: 4), // Kurangi padding
                       decoration: BoxDecoration(
                         color: product.stock > 10
                             ? Colors.green[50]
@@ -155,7 +125,7 @@ class ProductCard extends StatelessWidget {
                       child: Text(
                         'Stock: ${product.stock}',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12, // Sedikit lebih kecil
                           fontWeight: FontWeight.w600,
                           color: product.stock > 10
                               ? Colors.green[800]
@@ -165,20 +135,20 @@ class ProductCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8), // Kurangi jarak
 
                 // Description
                 Text(
                   product.description,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14, // Sedikit lebih kecil
                     color: Colors.grey[700],
-                    height: 1.5,
+                    height: 1.4, // Kurangi tinggi baris
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12), // Kurangi jarak
 
                 // Action Buttons
                 Row(
@@ -186,27 +156,35 @@ class ProductCard extends StatelessWidget {
                   children: [
                     ElevatedButton.icon(
                       onPressed: onEdit,
-                      icon: const Icon(Icons.edit, size: 20),
-                      label: const Text('Edit'),
+                      icon:
+                          const Icon(Icons.edit, size: 16), // Icon lebih kecil
+                      label: const Text('Edit',
+                          style: TextStyle(fontSize: 12)), // Teks lebih kecil
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: Colors.orange[700],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8), // Kurangi padding
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8), // Kurangi jarak
                     ElevatedButton.icon(
                       onPressed: () async => await onDelete(),
-                      icon: const Icon(Icons.delete, size: 20),
-                      label: const Text('Delete'),
+                      icon: const Icon(Icons.delete,
+                          size: 16), // Icon lebih kecil
+                      label: const Text('Delete',
+                          style: TextStyle(fontSize: 12)), // Teks lebih kecil
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: Colors.red[700],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8), // Kurangi padding
                       ),
                     ),
                   ],

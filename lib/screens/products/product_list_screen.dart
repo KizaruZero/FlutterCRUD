@@ -94,7 +94,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Custom App Bar with Shop Name
       appBar: AppBar(
         title: const Text(
           'KizaruShop',
@@ -108,7 +107,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
         foregroundColor: Colors.black87,
         elevation: 0,
         actions: [
-          // Add Product Button with Modern Styling
           Container(
             margin: const EdgeInsets.only(right: 10),
             decoration: BoxDecoration(
@@ -131,13 +129,23 @@ class _ProductListScreenState extends State<ProductListScreen> {
           ),
         ],
       ),
-
-      // Background Color and Body
       backgroundColor: Colors.grey[100],
-      body: Stack(
-        children: [
-          // Product List
-          FutureBuilder<List<Product>>(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Responsive Grid Calculation
+          int crossAxisCount;
+          if (constraints.maxWidth >= 1200) {
+            // Desktop: 3 cards per row
+            crossAxisCount = 3;
+          } else if (constraints.maxWidth >= 600) {
+            // Tablet/Medium: 2 cards per row
+            crossAxisCount = 2;
+          } else {
+            // Mobile: 1 card per row
+            crossAxisCount = 1;
+          }
+
+          return FutureBuilder<List<Product>>(
             future: _products,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -211,8 +219,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       _products = ProductService().getProducts();
                     });
                   },
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(top: 10),
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(10),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio:
+                          0.65, // Adjust for better card proportions
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                    ),
                     itemCount: products.length,
                     itemBuilder: (context, index) {
                       final product = products[index];
@@ -239,24 +254,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 );
               }
             },
-          ),
-
-          // Loading Overlay
-          if (_isLoading)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.orange[700]!),
-                ),
-              ),
-            ),
-        ],
+          );
+        },
       ),
     );
   }
