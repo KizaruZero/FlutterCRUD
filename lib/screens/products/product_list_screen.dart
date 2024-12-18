@@ -16,6 +16,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   late Future<List<Product>> _products;
   bool _isLoading = false;
 
+// Fetching/Loop for Products
   @override
   void initState() {
     super.initState();
